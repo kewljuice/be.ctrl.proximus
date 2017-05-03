@@ -26,6 +26,22 @@ function proximus_civicrm_xmlMenu(&$files) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function proximus_civicrm_install() {
+
+  // Add "Proximus" SMS provider.
+  $groupID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionGroup', 'sms_provider_name', 'id', 'name');
+  $params  =
+    [
+      'option_group_id' => $groupID,
+      'label'           => 'Proximus',
+      'value'           => 'be.ctrl.proximus',
+      'name'            => 'proximus',
+      'is_default'      => 1,
+      'is_active'       => 1,
+      'version'         => 3,
+    ];
+  require_once 'api/api.php';
+  civicrm_api('option_value', 'create', $params);
+
   _proximus_civix_civicrm_install();
 }
 
@@ -44,6 +60,21 @@ function proximus_civicrm_postInstall() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
 function proximus_civicrm_uninstall() {
+
+  // Remove "Proximus" SMS provider.
+  $optionID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'proximus', 'id', 'name');
+  if ($optionID) {
+    CRM_Core_BAO_OptionValue::del($optionID);
+  }
+
+  $filter    = ['name' => 'be.ctrl.proximus'];
+  $Providers = CRM_SMS_BAO_Provider::getProviders(FALSE, $filter, FALSE);
+  if ($Providers) {
+    foreach ($Providers as $key => $value) {
+      CRM_SMS_BAO_Provider::del($value['id']);
+    }
+  }
+
   _proximus_civix_civicrm_uninstall();
 }
 
@@ -53,6 +84,21 @@ function proximus_civicrm_uninstall() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
 function proximus_civicrm_enable() {
+
+  // Enable "Proximus" SMS providers
+  $optionID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'proximus', 'id', 'name');
+  if ($optionID) {
+    CRM_Core_BAO_OptionValue::setIsActive($optionID, TRUE);
+  }
+
+  $filter    = ['name' => 'be.ctrl.proximus'];
+  $Providers = CRM_SMS_BAO_Provider::getProviders(FALSE, $filter, FALSE);
+  if ($Providers) {
+    foreach ($Providers as $key => $value) {
+      CRM_SMS_BAO_Provider::setIsActive($value['id'], TRUE);
+    }
+  }
+
   _proximus_civix_civicrm_enable();
 }
 
@@ -62,6 +108,21 @@ function proximus_civicrm_enable() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  */
 function proximus_civicrm_disable() {
+
+  // Disable "Proximus" SMS providers
+  $optionID = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_OptionValue', 'proximus', 'id', 'name');
+  if ($optionID) {
+    CRM_Core_BAO_OptionValue::setIsActive($optionID, FALSE);
+  }
+
+  $filter    = ['name' => 'be.ctrl.proximus'];
+  $Providers = CRM_SMS_BAO_Provider::getProviders(FALSE, $filter, FALSE);
+  if ($Providers) {
+    foreach ($Providers as $key => $value) {
+      CRM_SMS_BAO_Provider::setIsActive($value['id'], FALSE);
+    }
+  }
+
   _proximus_civix_civicrm_disable();
 }
 
@@ -121,31 +182,3 @@ function proximus_civicrm_angularModules(&$angularModules) {
 function proximus_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _proximus_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
-
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function proximus_civicrm_preProcess($formName, &$form) {
-
-} // */
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
-function proximus_civicrm_navigationMenu(&$menu) {
-  _proximus_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => ts('The Page', array('domain' => 'be.ctrl.proximus')),
-    'name' => 'the_page',
-    'url' => 'civicrm/the-page',
-    'permission' => 'access CiviReport,access CiviContribute',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _proximus_civix_navigationMenu($menu);
-} // */
