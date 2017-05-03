@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<extension key="be.ctrl.proximus" type="module">
+  <file>proximus</file>
+  <name>CiviCRM Proximus SMS extension</name>
+  <description>Send SMS via proximus API.</description>
+  <license>AGPL-3.0</license>
+  <maintainer>
+    <author>Hechtermans Wouter</author>
+    <email>wouter@ctrl.be</email>
+  </maintainer>
+  <urls>
+    <url desc="Main Extension Page">https://github.com/kewljuice/be.ctrl.proximus</url>
+    <url desc="Documentation">https://github.com/kewljuice/be.ctrl.proximus</url>
+    <url desc="Support">http://www.ctrl.be</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2017-05-03</releaseDate>
+  <version>1.0</version>
+  <develStage>alpha</develStage>
+  <compatibility>
+    <ver>4.7</ver>
+  </compatibility>
+  <comments>This is a new, undeveloped module</comments>
+  <civix>
+    <namespace>CRM/ctrl/proximus</namespace>
+  </civix>
+</extension>
