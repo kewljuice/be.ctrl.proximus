@@ -11,27 +11,30 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
 
   /**
    * api type to use to send a message
-   * @var	string
+   *
+   * @var  string
    */
   protected $_apiType = 'http';
 
   /**
    * provider details
-   * @var	string
+   *
+   * @var  string
    */
-  protected $_providerInfo = array();
+  protected $_providerInfo = [];
 
   /**
    * Temporary file resource id
-   * @var	resource
+   *
+   * @var  resource
    */
   protected $_fp;
 
   public $_apiURL = "https://api.ringring.be/sms/V1";
 
-  protected $_messageType = array();
+  protected $_messageType = [];
 
-  protected $_messageStatus = array();
+  protected $_messageStatus = [];
 
   /**
    * We only need one instance of this object. So we use the singleton
@@ -40,22 +43,19 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
    * @var object
    * @static
    */
-  static private $_singleton = array();
+  static private $_singleton = [];
 
   /**
    * Constructor
    *
-   * Create and auth a proximus session.
+   * Create and auth a Proximus session.
    *
    * @param array $provider
    * @param bool $skipAuth
    *
    * @return void
    */
-  function __construct($provider = array( ), $skipAuth = FALSE) {
-
-    // Log.
-    watchdog("be_ctrl_proximus", "construct" . $skipAuth);
+  function __construct($provider = [], $skipAuth = FALSE) {
 
     // Initialize vars.
     $this->_apiType = CRM_Utils_Array::value('api_type', $provider, 'http');
@@ -66,21 +66,22 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
   }
 
   /**
-   * singleton function used to manage this object
+   * Singleton function used to manage this object.
    *
    * @param array $providerParams
    * @param bool $force
+   *
    * @return object
    * @static
    */
-  static function &singleton($providerParams = array(), $force = FALSE) {
+  static function &singleton($providerParams = [], $force = FALSE) {
     $providerID = CRM_Utils_Array::value('provider_id', $providerParams);
-    $skipAuth   = $providerID ? FALSE : TRUE;
-    $cacheKey   = (int) $providerID;
+    $skipAuth = $providerID ? FALSE : TRUE;
+    $cacheKey = (int) $providerID;
     if (!isset(self::$_singleton[$cacheKey]) || $force) {
-      $provider = array();
+      $provider = [];
       if ($providerID) {
-        $provider = CRM_SMS_BAO_Provider::getProviderInfo($providerID, 'name');
+        $provider = CRM_SMS_BAO_Provider::getProviderInfo($providerID);
       }
       self::$_singleton[$cacheKey] = new be_ctrl_proximus($provider, $skipAuth);
     }
@@ -89,7 +90,8 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
 
   /**
    * Authenticate to the SMS Server.
-   * Not needed with Proximus
+   * Not needed with Proximus.
+   *
    * @return boolean TRUE
    * @access public
    * @since 1.1
@@ -106,16 +108,47 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
    * @param $message
    * @param null $jobID
    * @param null $userID
-   * @internal param \the $array message with a to/from/text
    *
-   * @return mixed true on sucess or PEAR_Error object
+   * @return mixed true on success or PEAR_Error object
    * @access public
+   * @throws \CRM_Core_Exception
    */
   function send($recipients, $header, $message, $jobID = NULL, $userID = NULL) {
+
     if ($this->_apiType == 'http') {
 
-      // log
-      watchdog("be_ctrl_proximus", "send");
+      // STEP 1. Send SMS.
+      $delivery = [];
+      $delivery['url'] = $this->_providerInfo['api_url'] . "/Message";
+      $delivery['key'] = $this->_providerInfo['password'];
+      $delivery['to'] = $header['To'];
+      $delivery['msg'] = $message;
+
+      // Log delivery.
+      watchdog("be_ctrl_proximus", "step1: delivery:" . print_r($delivery, TRUE));
+
+      // STEP 2. Check response and create SMS delivery activity.
+      $response = [];
+      $response['cid'] = $header['contact_id'];
+
+      // Check if outbound or mass mailing.
+      if (isset($header['parent_activity_id'])) {
+        $response['type'] = "outbound";
+        $response['aid'] = $header['parent_activity_id'];
+      }
+      else {
+        $response['type'] = "mass";
+      }
+
+      // Log delivery response.
+      watchdog("be_ctrl_proximus", "step2: delivery response:" . print_r($response, TRUE));
+
+      // TODO Create SMS delivery activity (aid:44)!
+
+      // $msgID = 'ID:' . rand();
+      // $activity = $this->createActivity($msgID, $message, $header, $jobID, $userID);
+      //watchdog("be_ctrl_proximus", "send msgID:" . print_r($msgID, TRUE));
+      //watchdog("be_ctrl_proximus", "send activity:" . print_r($activity, TRUE));
 
     }
     return TRUE;
