@@ -1,4 +1,4 @@
-#Proximus SMS Provider
+# Proximus SMS Provider
 
 ## Introduction
 Proximus CiviCRM integration: allows delivering SMS messages to mobile phone users through Proximus API.
@@ -39,4 +39,4 @@ Proximus CiviCRM integration: allows delivering SMS messages to mobile phone use
 
 Make sure you have configured the **Send Scheduled SMS** Scheduled Job.
 
-To configure scheduled jobs, go to ```"Administer > System Settings > Scheduled Jobs"```.
+To configure scheduled jobs, go to ```"Administer > System Settings > Scheduled Jobs"``` or **yoursite.org/civicrm/admin/job**.
