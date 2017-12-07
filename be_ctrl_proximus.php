@@ -30,11 +30,16 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
    */
   protected $_fp;
 
-  public $_apiURL = "https://api.ringring.be/sms/V1";
+  public $_apiURL = 'https://api.ringring.be/sms/V1';
 
   protected $_messageType = [];
 
   protected $_messageStatus = [];
+
+  /**
+   * Activity "SMS delivery" id.
+   */
+  protected $_smsDelivery = '';
 
   /**
    * We only need one instance of this object. So we use the singleton
@@ -53,13 +58,21 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
    * @param array $provider
    * @param bool $skipAuth
    *
-   * @return void
+   * @throws \CiviCRM_API3_Exception
    */
   function __construct($provider = [], $skipAuth = FALSE) {
 
     // Initialize vars.
     $this->_apiType = CRM_Utils_Array::value('api_type', $provider, 'http');
     $this->_providerInfo = $provider;
+
+    // Fetch "SMS delivery" id.
+    $this->_smsDelivery = civicrm_api3('OptionValue', 'getvalue', [
+      'sequential' => 1,
+      'return' => "value",
+      'name' => "SMS delivery",
+      'option_group_id' => "activity_type",
+    ]);
 
     // Authenticate.
     $this->authenticate();
@@ -118,8 +131,9 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
     if ($this->_apiType == 'http') {
 
       // STEP 1. Send SMS.
+      // ******
       $delivery = [];
-      $delivery['url'] = $this->_providerInfo['api_url'] . "/Message";
+      $delivery['url'] = $this->_providerInfo['api_url'] . '/Message';
       $delivery['key'] = $this->_providerInfo['password'];
       $delivery['to'] = $header['To'];
       $delivery['msg'] = $message;
@@ -127,14 +141,16 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
       // Log delivery.
       watchdog("be_ctrl_proximus", "step1: delivery:" . print_r($delivery, TRUE));
 
-      // STEP 2. Check response and create SMS delivery activity.
+      // STEP 2. Build response array and create SMS delivery activity.
+      // ******
       $response = [];
-      $response['cid'] = $header['contact_id'];
+      $response['contact_id'] = $header['contact_id'];
+      $response['provider_id'] = $header['provider_id'];
 
-      // Check if outbound or mass mailing.
+      // Check if 'outbound' or 'mass' mailing.
       if (isset($header['parent_activity_id'])) {
         $response['type'] = "outbound";
-        $response['aid'] = $header['parent_activity_id'];
+        $response['parent_activity_id'] = $header['parent_activity_id'];
       }
       else {
         $response['type'] = "mass";
@@ -144,6 +160,7 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
       watchdog("be_ctrl_proximus", "step2: delivery response:" . print_r($response, TRUE));
 
       // TODO Create SMS delivery activity (aid:44)!
+      // watchdog("be_ctrl_proximus", "step2: activity id " . print_r($this->_smsDelivery, TRUE));
 
       // $msgID = 'ID:' . rand();
       // $activity = $this->createActivity($msgID, $message, $header, $jobID, $userID);
