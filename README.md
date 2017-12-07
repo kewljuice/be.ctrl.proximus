@@ -23,3 +23,20 @@ Proximus CiviCRM integration: allows delivering SMS messages to mobile phone use
 
 - Configure SMS provider at ```"Administer -> System Settings -> SMS Providers"``` or **yoursite.org/civicrm/admin/sms/provider**. 
 
+| Parameter      	| Value                          	| Required 	|
+|----------------	|--------------------------------	|----------	|
+| Name           	| Proximus                       	|          	|
+| Title          	| Proximus                       	|          	|
+| Username       	| Proximus                       	|          	|
+| Password       	| [Enter Proximus API key]          | *        	|
+| API Type       	| http                           	|          	|
+| API Url        	| https://api.ringring.be/sms/V1 	| *        	|
+| API Parameters 	| {}                             	|          	|
+
+## FAQ
+
+#### Why don't I receive a mass SMS mailing?
+
+Make sure you have configured the **Send Scheduled SMS** Scheduled Job.
+
+To configure scheduled jobs, go to ```"Administer > System Settings > Scheduled Jobs"```.
