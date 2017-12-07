@@ -119,13 +119,21 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
       // STEP 1. Send SMS.
       // ******
       $delivery = [];
-      $delivery['url'] = $this->_providerInfo['api_url'] . '/Message';
-      $delivery['key'] = $this->_providerInfo['password'];
+      $delivery['ApiKey'] = $this->_providerInfo['password'];
       $delivery['to'] = $header['To'];
-      $delivery['msg'] = $message;
+      $delivery['message'] = $message;
 
-      // Log delivery.
-      watchdog("be_ctrl_proximus", "step1: delivery:" . print_r($delivery, TRUE));
+      // Send to Proximus API via curl.
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_URL, $this->_providerInfo['api_url'] . '/Message');
+      curl_setopt($ch, CURLOPT_POST, 1);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($delivery));
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+      $proximus = curl_exec($ch);
+      curl_close($ch);
+
+      // Convert JSON to object.
+      $proximus = json_decode($proximus);
 
       // STEP 2. Build response array and create SMS delivery activity.
       // ******
@@ -144,8 +152,14 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
         $subject = 'Delivery Mass SMS';
       }
 
-      // Log delivery response.
-      // watchdog("be_ctrl_proximus", "step2: delivery response:" . print_r($response, TRUE));
+      // Append proximus results.
+      $response['proximus'] = $proximus;
+
+      // Check status.
+      $status = 'Unreachable';
+      if ($proximus->ResultCode == 0 && $proximus->ResultDescription == 'Success') {
+        $status = 'Completed';
+      }
 
       // Create SMS delivery activity.
       $activity = civicrm_api3('Activity', 'create', [
@@ -156,7 +170,7 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
         'details' => json_encode($response),
         'source_contact_id' => "user_contact_id",
         "target_id" => $header['contact_id'],
-        'status_id' => 'Completed',
+        'status_id' => $status,
       ]);
 
     }
