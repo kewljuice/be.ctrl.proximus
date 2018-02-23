@@ -138,27 +138,37 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
       // STEP 2. Build response array and create SMS delivery activity.
       // ******
       $response = [];
-      $response['contact_id'] = $header['contact_id'];
+      $response['Contact'] = $header['contact_id'];
 
       // Check if 'outbound' or 'mass' mailing.
       if (isset($header['parent_activity_id'])) {
-        $response['type'] = "outbound";
+        $response['Type'] = "outbound";
         $parent = $header['parent_activity_id'];
         $subject = $header['activity_subject'];
       }
       else {
-        $response['type'] = "mass";
+        $response['Type'] = "mass";
         $parent = NULL;
         $subject = 'Delivery Mass SMS';
       }
-
-      // Append proximus results.
-      $response['proximus'] = $proximus;
 
       // Check status.
       $status = 'Unreachable';
       if ($proximus->ResultCode == 0 && $proximus->ResultDescription == 'Success') {
         $status = 'Completed';
+      }
+
+      // Output $proximus as html table.
+      $table = "";
+      if (!empty($proximus)) {
+        $table .= "<table>";
+        foreach ($proximus as $key => $value) {
+          $table .= "<tr>";
+          $table .= "<td>$key</td>";
+          $table .= "<td>" . print_r($value, TRUE) . "</td>";
+          $table .= "</tr>";
+        }
+        $table .= "</table>";
       }
 
       // Create SMS delivery activity.
@@ -167,7 +177,7 @@ class be_ctrl_proximus extends CRM_SMS_Provider {
         'activity_type_id' => "SMS delivery",
         'parent_id' => $parent,
         'subject' => $subject,
-        'details' => json_encode($response),
+        'details' => $table,
         'source_contact_id' => "user_contact_id",
         "target_id" => $header['contact_id'],
         'status_id' => $status,
